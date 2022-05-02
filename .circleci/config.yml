@@ -1,0 +1,34 @@
+version: 2.1
+
+jobs:
+  
+  build-medium-amd64:
+    machine:
+      image: ubuntu-2004:202101-01
+   
+    working_directory: ~/python-lz4
+    steps:
+      - checkout
+      - run:
+          name: ️️🏗️ pip dev requirements
+          command: |
+             uname -m 
+             docker run -e ARANGO_RANDOM_ROOT_PASSWORD=1 -d --name arangodb-instance arangodb/arangodb
+             arangodb/arangodb:3.7.7 --server.jwt-secret-keyfile=/tmp/keyfile
+             docker cp tests/static/service.zip arango:/tmp/service.zip
+             docker cp tests/static/keyfile arango:/tmp/keyfile
+             docker start arango
+             git fetch --prune --unshallow
+             python -m pip install --upgrade pip setuptools wheel
+             pip install .[dev]
+             black --check .
+             flake8 .
+             isort --check --profile=black .
+             mypy arango
+             py.test --complete --cov=arango --cov-report=xml
+workflows:
+  version: 2
+  python3.8:
+    jobs:
+      
+      - build-medium-amd64
