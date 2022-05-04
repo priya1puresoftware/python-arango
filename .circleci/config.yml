@@ -1,16 +1,22 @@
 version: 2.1
 
+orbs:
+  python: circleci/python@1.5.0
+
 jobs:
-  
-  build-medium-amd64:
+  manylinux2014-aarch64:
+    parameters:
+      cibw_build:
+        type: string
+        default: "cp37-*"
+
     machine:
       image: ubuntu-2004:202101-01
-   
-    working_directory: ~/python-lz4
+    resource_class: arm.medium
     steps:
       - checkout
       - run:
-          name: ️️🏗️ pip dev requirements
+          name: Install dependencies
           command: |
              uname -m 
              docker run -e ARANGO_RANDOM_ROOT_PASSWORD=1 -d --name arangodb-instance arangodb/arangodb
@@ -27,8 +33,11 @@ jobs:
              mypy arango
              py.test --complete --cov=arango --cov-report=xml
 workflows:
-  version: 2
-  python3.8:
+  version: 2.1
+  main:
     jobs:
-      
-      - build-medium-amd64
+      - manylinux2014-aarch64:
+          matrix:
+            parameters:
+              cibw_build:
+                - "cp37*"
